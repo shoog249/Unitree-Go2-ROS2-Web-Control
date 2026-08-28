@@ -8,7 +8,7 @@ The browser interface connects to ROS 2 through **rosbridge / ROSLIB.js** and se
 
 ## Project Demo
 
-Below is a demonstration of the Unitree Go2 web-based remote control system running in simulation:
+Below is a demonstration of the web-based remote control system used to control the Unitree Go2 robot:
 
 https://github.com/user-attachments/assets/eea8695c-e57e-4d2a-8048-5f6657dc5c8d
 
