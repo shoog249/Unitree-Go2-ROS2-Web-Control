@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository shows the web control part of my Unitree Go2 ROS 2 project developed and tested in simulation.
+This repository shows the web control part of my Unitree Go2 ROS 2 project developed and tested.
 
 The browser interface connects to ROS 2 through **rosbridge / ROSLIB.js** and sends robot motion commands using `geometry_msgs/Twist`. The project includes camera viewing, button control, keyboard teleoperation, a virtual joystick, and relay-topic testing.
 
@@ -56,9 +56,6 @@ The wider project also used a simulated front camera. Its image stream was passe
 This project was completed using course-provided ROS 2 guidance and an existing open-source Unitree Go2 simulation as the foundation.
 
 In this project, I set up the ROS 2 and Gazebo environment, tested the browser controls, worked with rosbridge and ROS topics, and tested the teleoperation workflow.
-
-This project was built using course guidance and an open-source Unitree Go2 base, and I am sharing the part I worked on and tested.
-
 ## Reference Material
 
 - Steven Eu Kok Seng — RoboticSensorROS course material:
