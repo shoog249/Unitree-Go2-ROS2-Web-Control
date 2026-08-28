@@ -6,6 +6,12 @@ This repository contains the web-control portion of a Unitree Go2 ROS 2 teleoper
 
 The browser interface connects to ROS 2 through **rosbridge / ROSLIB.js** and sends robot motion commands using `geometry_msgs/Twist`. The project includes camera viewing, button control, keyboard teleoperation, a virtual joystick, and relay-topic testing.
 
+## Project Demo
+
+Below is a demonstration of the Unitree Go2 web-based remote control system running in simulation:
+
+https://github.com/user-attachments/assets/eea8695c-e57e-4d2a-8048-5f6657dc5c8d
+
 ## Files
 
 - `index.html` — displays the camera stream served by the ROS/Flask camera service.
