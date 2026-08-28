@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Unitree Go2 Front Camera</title>
+  </head>
+  <body>
+    <h1>Unitree Go2 Front Camera</h1>
+    <img id="stream" alt="video stream" />
+
+    <script>
+      // Automatically get the current host IP or domain
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const ros_ip = urlParams.get('ros_ip') || 'localhost';
+
+      const port = 8080; // Change if your Flask or HTTP server uses another port
+      const videoUrl = `http://${ros_ip}:${port}/video`;
+
+      // Set it as the image source
+      document.getElementById("stream").src = videoUrl;
+
+      console.log("Streaming from:", videoUrl);
+    </script>
+  </body>
+</html>
+

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title> elay Control</title>
+  <script src="roslib.min.js"></script>
+  <script src="nipplejs.min.js"></script>
+  <style>
+    #joystick-zone { width: 200px; height: 200px; margin: 20px auto; }
+    button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body style="font-family:sans-serif; text-align:center; margin-top:20px;">
+  <h2>Relay Control</h2>
+  <div id="status">Connecting...</div>
+  <br>
+  <!-- Relay Buttons -->
+  <div>
+    <button id="relay-on">Relay ON</button>
+    <button id="relay-off">Relay OFF</button>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const ros_ip = urlParams.get('ros_ip') || 'localhost';
+
+    // Connect to ROS
+    const rosbridge_port = 9090;
+    const rosbridgeUrl = `ws://${ros_ip}:${rosbridge_port}`;
+    const ros = new ROSLIB.Ros({ url: rosbridgeUrl });
+
+    ros.on('connection', function() { document.getElementById("status").innerHTML = "Connected ✅"; });
+    ros.on('error', function(error) { document.getElementById("status").innerHTML = "Error ❌"; console.error(error); });
+    ros.on('close', function() { document.getElementById("status").innerHTML = "Connection Closed ⚠️"; });
+
+    // Publisher for /relay_int
+    var relayPub = new ROSLIB.Topic({
+      ros: ros,
+      name: '/relay_int',
+      messageType: 'std_msgs/Int32'
+    });
+
+    // Relay button events
+    document.getElementById("relay-on").onclick = function() {
+      relayPub.publish({ data: 1 });
+    };
+    document.getElementById("relay-off").onclick = function() {
+      relayPub.publish({ data: 0 });
+    };
+
+  </script>
+</body>
+</html>

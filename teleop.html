@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Keyboard Teleop</title>
+  <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; text-align:center; margin-top:40px; }
+    p { font-size:18px; }
+    #status { margin-top:8px; color:#555; }
+  </style>
+</head>
+<body>
+  <h2>Keyboard Teleoperation</h2>
+  <p>Click this page, then hold keys: W/A/S/D to move, Space to stop</p>
+  <p id="status">Status: Connecting…</p>
+
+  <script>
+    // --- Read IP/port from URL ---
+    const qp = new URLSearchParams(window.location.search);
+    const ros_ip   = qp.get('ros_ip')   || 'localhost';
+    const ros_port = qp.get('ros_port') || '9090';
+
+    // --- Connect to rosbridge ---
+    const ros = new ROSLIB.Ros({ url: `ws://${ros_ip}:${ros_port}` });
+    const statusEl = document.getElementById('status');
+    ros.on('connection', () => statusEl.textContent = 'Status: Connected');
+    ros.on('error',      () => statusEl.textContent = 'Status: Error');
+    ros.on('close',      () => statusEl.textContent = 'Status: Disconnected');
+
+    // --- Publisher to /cmd_vel ---
+    const cmdVel = new ROSLIB.Topic({
+      ros: ros,
+      name: '/cmd_vel',
+      messageType: 'geometry_msgs/Twist'
+    });
+
+    // --- Publish continuously while a key is held (required by controllers) ---
+    let vx = 0.0, wz = 0.0;
+    let timer = null;
+
+    function startLoop() {
+      if (timer) return;
+      timer = setInterval(() => {
+        cmdVel.publish(new ROSLIB.Message({
+          linear:  {x: vx, y: 0, z: 0},
+          angular: {x: 0,  y: 0, z: wz}
+        }));
+      }, 50); // 20 Hz
+    }
+    function stopLoop() {
+      if (!timer) return;
+      clearInterval(timer);
+      timer = null;
+      // final stop
+      cmdVel.publish(new ROSLIB.Message({
+        linear:  {x: 0, y: 0, z: 0},
+        angular: {x: 0, y: 0, z: 0}
+      }));
+    }
+
+    function setCmd(lx, az) { vx = lx; wz = az; }
+
+    function onKeyDown(e) {
+      e.preventDefault();
+      switch (e.key.toLowerCase()) {
+        case 'w': setCmd( 1.0,  0.0); startLoop(); break;
+        case 's': setCmd(-1.0,  0.0); startLoop(); break;
+        case 'a': setCmd( 0.0,  1.2); startLoop(); break;
+        case 'd': setCmd( 0.0, -1.2); startLoop(); break;
+        case ' ': setCmd( 0.0,  0.0); startLoop(); break; // stop
+      }
+    }
+    function onKeyUp(e) {
+      e.preventDefault();
+      setCmd(0.0, 0.0);
+      stopLoop();
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup',   onKeyUp);
+  </script>
+</body>
+</html>
+

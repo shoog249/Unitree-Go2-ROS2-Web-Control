@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ROS Camera Viewer + Joystick</title>
+  <script src="roslib.min.js"></script>
+  <script src="nipplejs.min.js"></script>
+  <style>
+    #joystick-zone { width: 200px; height: 200px; margin: 20px auto; }
+  </style>
+</head>
+<body style="font-family:sans-serif; text-align:center; margin-top:20px;">
+  <h2>Camera Viewer + Joystick</h2>
+  <div id="status">Connecting...</div>
+  <br>
+	<img id="stream" alt="video stream" />
+  <div id="joystick-zone"></div>
+
+  <script>
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const ros_ip = urlParams.get('ros_ip') || 'localhost';
+
+      const port = 8080; // Change if your Flask or HTTP server uses another port
+      const videoUrl = `http://${ros_ip}:${port}/video`;
+
+    // Set it as the image source
+    document.getElementById("stream").src = videoUrl;
+
+    console.log("Streaming from:", videoUrl);
+  
+      // Connect to ROS using ros_ip
+      const rosbridge_port = 9090;
+      const rosbridgeUrl = `ws://${ros_ip}:${rosbridge_port}`;
+      const ros = new ROSLIB.Ros({
+        url: rosbridgeUrl
+      });
+
+    ros.on('connection', function() { document.getElementById("status").innerHTML = "Connected ✅"; });
+    ros.on('error', function(error) { document.getElementById("status").innerHTML = "Error ❌"; console.error(error); });
+    ros.on('close', function() { document.getElementById("status").innerHTML = "Connection Closed ⚠️"; });
+
+    // Publisher for /cmd_vel_out
+    var cmdVel = new ROSLIB.Topic({
+      ros: ros,
+      name: '/cmd_vel_smoothed',
+      messageType: 'geometry_msgs/Twist'
+    });
+
+    // Initialize joystick
+    var joystick = nipplejs.create({
+      zone: document.getElementById('joystick-zone'),
+      mode: 'static',
+      position: { left: '50%', top: '50%' },
+      color: 'blue',
+      size: 150
+    });
+
+	joystick.on('move', function(evt, data) {
+	  var max_linear = 1.0;   // max forward/backward speed
+	  var max_angular = 2.0;  // max rotational speed
+	  if (data && data.distance) {
+	    var angle = data.angle.radian;
+	    var force = data.distance / 75; // normalize (adjust 75 if needed)
+	
+	    // Fix: use sin(angle) for forward/backward, cos(angle) for turning
+	    var twist = new ROSLIB.Message({
+	      linear:  { x: Math.sin(angle) * max_linear * force, y: 0, z: 0 },
+	      angular: { x: 0, y: 0, z: -Math.cos(angle) * max_angular * force }
+	    });
+	
+	    cmdVel.publish(twist);
+	  }
+	});
+
+    // Stop robot when joystick released
+    joystick.on('end', function() {
+      var twist = new ROSLIB.Message({ linear:{x:0,y:0,z:0}, angular:{x:0,y:0,z:0} });
+      cmdVel.publish(twist);
+    });
+
+  </script>
+</body>
+</html>

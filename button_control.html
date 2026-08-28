@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Robot Control</title>
+  <script src="roslib.min.js"></script>
+</head>
+<body style="font-family:sans-serif; text-align:center; margin-top:50px;">
+	<h2>Unitree Go2 Front Camera</h2>
+	<img id="stream" alt="video stream" />
+  
+  <h2>Robot Controller</h2>
+
+  <button onclick="moveForward()">⬆ Forward</button><br><br>
+  <button onclick="moveBackward()">⬇ Backward</button><br><br>
+  <button onclick="stopRobot()">⏹ Stop</button>
+
+  <script>
+  
+      const urlParams = new URLSearchParams(window.location.search);
+      const ros_ip = urlParams.get('ros_ip') || 'localhost';
+
+      const port = 8080; // Change if your Flask or HTTP server uses another port
+      const videoUrl = `http://${ros_ip}:${port}/video`;
+
+    // Set it as the image source
+    document.getElementById("stream").src = videoUrl;
+
+    console.log("Streaming from:", videoUrl);
+  
+      // Connect to ROS using ros_ip
+      const rosbridge_port = 9090;
+      const rosbridgeUrl = `ws://${ros_ip}:${rosbridge_port}`;
+      const ros = new ROSLIB.Ros({
+        url: rosbridgeUrl
+      });
+
+    ros.on('connection', function() {
+      console.log('Connected to websocket server.');
+    });
+
+    ros.on('error', function(error) {
+      console.log('Error connecting: ', error);
+    });
+
+    ros.on('close', function() {
+      console.log('Connection closed.');
+    });
+
+    // Create cmd_vel publisher
+    var cmdVel = new ROSLIB.Topic({
+      ros : ros,
+      name : '/cmd_vel',
+      messageType : 'geometry_msgs/Twist'
+    });
+
+    function moveForward() {
+      var twist = new ROSLIB.Message({
+        linear : {x: 0.2, y: 0.0, z: 0.0},
+        angular : {x: 0.0, y: 0.0, z: 0.0}
+      });
+      cmdVel.publish(twist);
+      console.log("Forward");
+    }
+
+    function moveBackward() {
+      var twist = new ROSLIB.Message({
+        linear : {x: -0.2, y: 0.0, z: 0.0},
+        angular : {x: 0.0, y: 0.0, z: 0.0}
+      });
+      cmdVel.publish(twist);
+      console.log("Backward");
+    }
+
+    function stopRobot() {
+      var twist = new ROSLIB.Message({
+        linear : {x: 0.0, y: 0.0, z: 0.0},
+        angular : {x: 0.0, y: 0.0, z: 0.0}
+      });
+      cmdVel.publish(twist);
+      console.log("Stopped");
+    }
+  </script>
+</body>
+</html>
